@@ -43,7 +43,7 @@ def clean(path):
     df['Time'] = pd.to_datetime(df['Date']).dt.time
 
     ### drop illeagal fields
-    df.drop(["IUCR", "FBI Code","Description"], axis=1)
+    df = df.drop(["IUCR", "FBI Code","Description"], axis=1)
 
     ### block
     df["orientation"] = df["Block"].str.slice(6,7)
@@ -53,5 +53,5 @@ def clean(path):
     return df
 
 clean("Task2/Dataset_crimes.csv").to_csv("clean_data.csv")
-
+split_data(15, "clean_data.csv")
 
