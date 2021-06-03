@@ -168,9 +168,9 @@ def clean(path):
     for desc in location_decription_set:
         geo_df[desc] = (desc == geo_df["Location Description"]).astype(int)
     ### drop illeagal and irrelevant fields
-    geo_df = geo_df.drop(["IUCR", "FBI Code","Description","Date", "Year","ID","Case Number", "Block", "geometry", "Location Description", "Updated On", "Longitude","Latitude", "Location", "Ward", "District", "Community Area"], axis=1)
     geo_df["Primary Type"] = geo_df["Primary Type"].replace(inv_classes)
     geo_df = additional_preprocessing(geo_df)
+    geo_df = geo_df.drop(["IUCR", "FBI Code","Description","Date", "Year","ID","Case Number", "Block", "geometry", "Location Description", "Updated On", "Longitude","Latitude", "Location", "Day","Month"], axis=1)
     return geo_df
 
 
@@ -179,7 +179,7 @@ def additional_preprocessing(df):
     df["Day_of_the_week2"] = np.cos(df["Day_of_the_week"] * 2 / 7 * np.pi)
     df = df.drop(["Day_of_the_week"], axis=1)
 
-    df["Time"] = pd.to_timedelta(df["Time"]) / pd.offsets.Minute(1)
+    df["Time"] = pd.to_timedelta(df["Time"].astype("str")) / pd.offsets.Minute(1)
     df["Time1"] = np.sin(df["Time"] * 2 / 1440 * np.pi)
     df["Time2"] = np.cos(df["Time"] * 2 / 1440 * np.pi)
     df = df.drop(["Time"], axis=1)
