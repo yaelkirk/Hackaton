@@ -170,7 +170,24 @@ def clean(path):
     ### drop illeagal and irrelevant fields
     geo_df = geo_df.drop(["IUCR", "FBI Code","Description","Date", "Year","ID","Case Number", "Block", "geometry", "Location Description", "Updated On", "Longitude","Latitude", "Location", "Ward", "District", "Community Area"], axis=1)
     geo_df["Primary Type"] = geo_df["Primary Type"].replace(inv_classes)
+    geo_df = additional_preprocessing(geo_df)
     return geo_df
+
+
+def additional_preprocessing(df):
+    df["Day_of_the_week1"] = np.sin(df["Day_of_the_week"] * 2 / 7 * np.pi)
+    df["Day_of_the_week2"] = np.cos(df["Day_of_the_week"] * 2 / 7 * np.pi)
+    df = df.drop(["Day_of_the_week"], axis=1)
+
+    df["Time"] = pd.to_timedelta(df["Time"]) / pd.offsets.Minute(1)
+    df["Time1"] = np.sin(df["Time"] * 2 / 1440 * np.pi)
+    df["Time2"] = np.cos(df["Time"] * 2 / 1440 * np.pi)
+    df = df.drop(["Time"], axis=1)
+    
+    df["Month1"] = np.sin(df["Month"] * 2 / 12 * np.pi)
+    df["Month2"] = np.cos(df["Month"] * 2 / 12 * np.pi)
+
+    return df
 
 clean("Task2/Dataset_crimes.csv").to_csv("clean_data.csv")
 split_data(15, "clean_data.csv")
@@ -188,5 +205,4 @@ def plot_orientation():
     geo_proj[geo_proj["orient_W"] == 1].plot(ax=ax, markersize=20,color="green", marker='o', label="West")
     geo_proj[geo_proj["orient_E"] == 1].plot(ax=ax, markersize=20,color="orange", marker='o', label="East")
     plt.show()
-
 
