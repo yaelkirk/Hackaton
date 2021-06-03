@@ -56,6 +56,18 @@ def clean(path):
     df = df.drop(["orientation"], axis=1)
     df = df.join(orient_dummies)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df = additional_preprocessing(df)
+    return df
+
+def additional_preprocessing(df):
+    df["Day_of_the_week1"] = np.sin(df["Day_of_the_week"] * 2 / 7 * np.pi)
+    df["Day_of_the_week2"] = np.cos(df["Day_of_the_week"] * 2 / 7 * np.pi)
+    df = df.drop(["Day_of_the_week"], axis=1)
+
+    df["Time"] = pd.to_timedelta(df["Time"]) / pd.offsets.Minute(1)
+    df["Time1"] = np.sin(df["Time"] * 2 / 1440 * np.pi)
+    df["Time2"] = np.cos(df["Time"] * 2 / 1440 * np.pi)
+    df = df.drop(["Time"], axis=1)
     return df
 
 clean("Task2/Dataset_crimes.csv").to_csv("clean_data.csv")
