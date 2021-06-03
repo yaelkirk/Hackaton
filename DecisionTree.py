@@ -21,9 +21,9 @@ def load_data(path):
     df['Day_of_the_week2'] = df['Day_of_the_week2'] + 1
     df['Month1'] = df['Month1'] + 1
     df['Month2'] = df['Month2'] + 1
-    df_beats = df.filter(regex="Beat*")
+    # df_beats = df.filter(regex="Beat*")
     df = df[df.columns.drop(list(df.filter(regex='Beat*')))]
-    return df, df_beats
+    return df
 
 
 features = [False, False, True, True, True, True, True, False, False, True, True, False
@@ -39,18 +39,18 @@ features = [False, False, True, True, True, True, True, False, False, True, True
 
 
 def decisionTree():
-    train, train_beats = load_data('train.csv')
+    train = load_data('train.csv')
     y_train = train['Primary Type']
     x_train = train.drop('Primary Type', axis=1)
-    test, test_beats = load_data('test.csv')
+    test = load_data('test.csv')
     x_test = test.drop('Primary Type', axis=1)
     y_test = test['Primary Type']
     clf = DecisionTreeClassifier(max_depth=10)
     x_train = x_train.loc[:, features]
-    x_train = pd.concat([x_train, train_beats], axis=1)
+    # x_train = pd.concat([x_train, train_beats], axis=1)
     clf.fit(x_train, y_train)
     x_test = x_test.loc[:, features]
-    res = clf.score(pd.concat([x_test, test_beats], axis=1), y_test)
+    res = clf.score(x_test, y_test)
     joblib.dump(clf, "DecisionTree")
     print(res)
 
@@ -61,7 +61,7 @@ def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_b
     accuracy = list()
     tree_depth = list()
     for i in range(1, x_train.shape[1]):
-        for j in range(1, 100, 10):
+        for j in range(1, 50, 3):
             clf = DecisionTreeClassifier(max_depth=j)
             fs = SelectKBest(score_func=chi2, k=i)
             x_reduced_train = fs.fit(x_train, y_train).fit_transform(x_train, y_train)
