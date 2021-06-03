@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 import sklearn.tree
-from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier, tree
+from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
 from sklearn.feature_selection import SelectKBest, chi2
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
+import joblib
+
 
 def load_data(path):
     """
@@ -13,50 +15,65 @@ def load_data(path):
     :return: DataFrame after processing
     """
     df = pd.read_csv(path, delimiter=",")
-    df = df.drop('Unnamed: 0', axis=1)
-    df = df.drop('Unnamed: 0.1', axis=1)
-    df = df.drop('Location Description', axis=1)
-    df = df.drop('Block', axis=1)
-    df = df.drop('Updated On', axis=1)
-    df["Arrest"] = df["Arrest"].astype(float)
-    df["Domestic"] = df["Domestic"].astype(int)
-    df["Day_of_the_week"] = pd.to_datetime(df['Date']).dt.dayofweek
-    df['Day'] = pd.to_datetime(df['Date']).dt.day
-    df['Month'] = pd.to_datetime(df['Date']).dt.month
-    df['Year'] = pd.to_datetime(df['Date']).dt.year
-    df['Time'] = pd.to_datetime(df['Date']).dt.time
-    df[['h.m']] = pd.DataFrame([(x.hour + x.minute / 60) for x in df['Time']])
-    df = df.drop('Date', axis=1)
-    df = df.drop('Time', axis=1)
-    df = df.dropna()
-    return df
+    df['Time1'] = df['Time1'] + 1
+    df['Time2'] = df['Time2'] + 1
+    df['Day_of_the_week1'] = df['Day_of_the_week1'] + 1
+    df['Day_of_the_week2'] = df['Day_of_the_week2'] + 1
+    df['Month1'] = df['Month1'] + 1
+    df['Month2'] = df['Month2'] + 1
+    df_beats = df.filter(regex="Beat*")
+    df = df[df.columns.drop(list(df.filter(regex='Beat*')))]
+
+    return df, df_beats
 
 
-if __name__ == '__main__':
-    train = load_data('train.csv')
+features = [True, True, True, True, True, True, True, False, True, False, False, False
+    , False, False, False, False, False, False, False, False, False, True, False, False,
+            False, False, False, True, False, False, False, False, False, True, True, False,
+            False, False, False, False, False, False, False, False, False, False, False, False,
+            False, False, False, False, False, False, False, False, False, False, False, False,
+            False, False, False, False, False, False, False, False, False, False, False, False,
+            False, False, False, False, False, False, False, False, False, False, False, False,
+            True, False, False, True, False, True, False, False, False, False, False, False,
+            False, False, False, False, False, False, False, False, False, False, False, True,
+            False, False, False, False, False, False, False, False, True, False, False]
+
+
+def decisionTree():
+    train, train_beats = load_data('train.csv')
     y_train = train['Primary Type']
-    classification_values = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
-    invert_dict = {v: k for k, v in classification_values.items()}
-    y_train = y_train.replace(invert_dict)
     x_train = train.drop('Primary Type', axis=1)
+    test, test_beats = load_data('test.csv')
+    x_test = test.drop('Primary Type', axis=1)
+    y_test = test['Primary Type']
+    clf = DecisionTreeClassifier(max_depth=10)
+    x_train = x_train.loc[:, features]
+    x_train = pd.concat([x_train, train_beats], axis=1)
+    clf.fit(x_train, y_train)
+    x_test = x_test.loc[:,features]
+    res = clf.score(pd.concat([x_test, test_beats], axis=1), y_test)
+    joblib.dump(clf, "DecisionTree")
+
+    print(res)
+
+
+def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_beats):
+    features_of_features = list()
     number_of_features = list()
     accuracy = list()
     tree_depth = list()
-    test = load_data('test.csv')
-    x_test = test.drop('Primary Type', axis=1)
-    y_test = test['Primary Type']
-    y_test = y_test.replace(invert_dict)
-    for i in range(10, x_train.shape[1], 100):
-        for j in range(10, 150, 10):
+    for i in range(1, x_train.shape[1]):
+        for j in range(1, 100, 10):
             clf = DecisionTreeClassifier(max_depth=j)
             fs = SelectKBest(score_func=chi2, k=i)
             x_reduced_train = fs.fit(x_train, y_train).fit_transform(x_train, y_train)
-            clf.fit(x_reduced_train, y_train)
+            clf.fit(pd.concat([x_reduced_train, train_beats], axis=1), y_train)
             a = fs.get_support()
+            features_of_features.append(a)
             new_series = pd.Series(a)
             b = new_series.values
             new_x = x_test.loc[:, b]
-            res = clf.score(new_x, y_test)
+            res = clf.score(pd.concat([new_x, test_beats], axis=1), y_test)
             number_of_features.append(i)
             tree_depth.append(j)
             accuracy.append(res)
@@ -69,6 +86,7 @@ if __name__ == '__main__':
     print(tree_depth[max_index])
     print('number of features:')
     print(number_of_features[max_index])
+    print(features_of_features[max_index])
 
     plt.title('Accuracy as function of tree depth and K features')
     ax = plt.axes(projection='3d')
