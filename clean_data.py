@@ -122,8 +122,8 @@ def clean(path):
     df = pd.read_csv(path)
     df = df.dropna()
     ### district between 1-31
+    df = df[df.District.gt(0)&df.District.le(25)]
 
-    df = df[df.District.gt(0)&df.District.le(22)] ## TODO: check validity
     ### arrest and domestic to boolean
 
     df["Arrest"] = df["Arrest"].astype(int)
@@ -158,19 +158,23 @@ def clean(path):
     orient_dummies = pd.get_dummies(df["orientation"], prefix="orient")
     df = df.drop(["orientation"], axis=1)
     df = df.join(orient_dummies)
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+    ### check pint isin Chicago
     chicago = gpd.read_file("geo_export_8ec36d6b-42d6-4d79-ba5f-fa35870e87a0.shp").geometry.unary_union
     crs = {'init': 'epsg:4326', 'no_defs': True}
     geometry = [Point(xy) for xy in zip(df["Longitude"], df["Latitude"])]
     geo_df = gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
     geo_df = geo_df[geo_df.geometry.within(chicago)]
+
     ### location description dummies
     for desc in location_decription_set:
         geo_df[desc] = (desc == geo_df["Location Description"]).astype(int)
+
     ### drop illeagal and irrelevant fields
     geo_df["Primary Type"] = geo_df["Primary Type"].replace(inv_classes)
     geo_df = additional_preprocessing(geo_df)
-    geo_df = geo_df.drop(["IUCR", "FBI Code","Description","Date", "Year","ID","Case Number", "Block", "geometry", "Location Description", "Updated On", "Longitude","Latitude", "Location", "Day","Month"], axis=1)
+    geo_df = geo_df.drop(["IUCR", "FBI Code","Description","Date", "Year","ID","Case Number", "Block", "geometry", "Location Description", "Updated On", "Longitude","Latitude", "Location", "Day","Month", "Community Area","Ward"], axis=1)
+    geo_df = geo_df.loc[:, ~geo_df.columns.str.contains('^Unnamed')]
     return geo_df
 
 
