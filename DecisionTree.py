@@ -23,11 +23,10 @@ def load_data(path):
     df['Month2'] = df['Month2'] + 1
     df_beats = df.filter(regex="Beat*")
     df = df[df.columns.drop(list(df.filter(regex='Beat*')))]
-
     return df, df_beats
 
 
-features = [True, True, True, True, True, True, True, False, True, False, False, False
+features = [False, False, True, True, True, True, True, False, False, True, True, False
     , False, False, False, False, False, False, False, False, False, True, False, False,
             False, False, False, True, False, False, False, False, False, True, True, False,
             False, False, False, False, False, False, False, False, False, False, False, False,
@@ -36,7 +35,7 @@ features = [True, True, True, True, True, True, True, False, True, False, False,
             False, False, False, False, False, False, False, False, False, False, False, False,
             True, False, False, True, False, True, False, False, False, False, False, False,
             False, False, False, False, False, False, False, False, False, False, False, True,
-            False, False, False, False, False, False, False, False, True, False, False]
+            False, False, False, False, False, True, True, True, True, False, False]
 
 
 def decisionTree():
@@ -50,10 +49,9 @@ def decisionTree():
     x_train = x_train.loc[:, features]
     x_train = pd.concat([x_train, train_beats], axis=1)
     clf.fit(x_train, y_train)
-    x_test = x_test.loc[:,features]
+    x_test = x_test.loc[:, features]
     res = clf.score(pd.concat([x_test, test_beats], axis=1), y_test)
     joblib.dump(clf, "DecisionTree")
-
     print(res)
 
 
@@ -102,3 +100,6 @@ def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_b
     ax.set_ylabel('number of features')
     ax.set_zlabel('accuracy')
     plt.show()
+
+
+decisionTree()

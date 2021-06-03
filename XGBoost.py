@@ -4,7 +4,7 @@ from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import joblib
 
-features = [True, True, True, True, True, True, True, False, True, False, False, False
+features = [False, False, True, True, True, True, True, False, False, True, True, False
     , False, False, False, False, False, False, False, False, False, True, False, False,
             False, False, False, True, False, False, False, False, False, True, True, False,
             False, False, False, False, False, False, False, False, False, False, False, False,
@@ -13,7 +13,7 @@ features = [True, True, True, True, True, True, True, False, True, False, False,
             False, False, False, False, False, False, False, False, False, False, False, False,
             True, False, False, True, False, True, False, False, False, False, False, False,
             False, False, False, False, False, False, False, False, False, False, False, True,
-            False, False, False, False, False, False, False, False, True, False, False]
+            False, False, False, False, False, True, True, True, True, False, False]
 
 model = XGBClassifier()
 train = pd.read_csv('train.csv', delimiter=",")
