@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Point, polygon
 
 def split_data(percent, path):
     df = pd.read_csv(path)
@@ -12,7 +15,8 @@ def split_data(percent, path):
 def clean(path):
     df = pd.read_csv(path)
     ### remove id, case_id, lon, lat, location, year
-    df = df.drop(['Latitude', 'Longitude', 'Location', 'Year', 'ID','Case Number'], axis=1)
+    df = df.drop(['Location', 'Year', 'ID','Case Number'], axis=1)
+    df = df.dropna()
     ### district between 1-31
     df = df[df.District.gt(0)&df.District.le(22)] ## TODO: check validity
     ### arrest and domestic to boolean
@@ -42,16 +46,31 @@ def clean(path):
     df['Year'] = pd.to_datetime(df['Date']).dt.year
     df['Time'] = pd.to_datetime(df['Date']).dt.time
 
+
     ### drop illeagal fields
-    df = df.drop(["IUCR", "FBI Code","Description"], axis=1)
+    df = df.drop(["IUCR", "FBI Code","Description","Date","Unnamed: 0"], axis=1)
 
     ### block
     df["orientation"] = df["Block"].str.slice(6,7)
     orient_dummies = pd.get_dummies(df["orientation"], prefix="orient")
     df = df.drop(["orientation"], axis=1)
     df = df.join(orient_dummies)
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     return df
 
 clean("Task2/Dataset_crimes.csv").to_csv("clean_data.csv")
 split_data(15, "clean_data.csv")
 
+# beats_map = gpd.read_file("geo_export_8ec36d6b-42d6-4d79-ba5f-fa35870e87a0.shp")
+# fig, ax = plt.subplots(figsize=(15,15))
+# beats_map.plot(ax=ax, alpha=0.8, color='gray')
+# crs = {'init': 'epsg:4326', 'no_defs': True}
+# proj = pd.read_csv("train.csv")[["Longitude", "Latitude", "orient_N", "orient_W", "orient_E", "orient_S"]]
+# geometry = [Point(xy) for xy in zip(proj["Longitude"], proj["Latitude"])]
+# geo_proj = gpd.GeoDataFrame(proj, crs=crs, geometry=geometry)
+# geo_proj[geo_proj["orient_N"] == 1].plot(ax=ax, markersize=20,color="yellow", marker='^', label="North")
+# geo_proj[geo_proj["orient_S"] == 1].plot(ax=ax, markersize=20,color="red", marker='^', label="South")
+# geo_proj[geo_proj["orient_W"] == 1].plot(ax=ax, markersize=20,color="green", marker='o', label="West")
+# geo_proj[geo_proj["orient_E"] == 1].plot(ax=ax, markersize=20,color="orange", marker='o', label="East")
+
+# plt.show()
