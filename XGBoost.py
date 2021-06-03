@@ -17,13 +17,13 @@ features = [False, False, True, True, True, True, True, False, False, True, True
 
 model = XGBClassifier()
 train = pd.read_csv('train.csv', delimiter=",")
-train_beats = train.filter(regex="Beat*")
+# train_beats = train.filter(regex="Beat*")
 train = train[train.columns.drop(list(train.filter(regex='Beat*')))]
 
 y_train = train['Primary Type']
 x_train = train.drop('Primary Type', axis=1)
 x_train = x_train.loc[:, features]
-x_train = pd.concat([x_train, train_beats], axis=1)
+# x_train = pd.concat([x_train, train_beats], axis=1)
 model.fit(x_train, y_train)
 print(model)
 
@@ -34,7 +34,7 @@ test = test[test.columns.drop(list(test.filter(regex='Beat*')))]
 y_test = test['Primary Type']
 x_test = test.drop('Primary Type', axis=1)
 x_test = x_test.loc[:, features]
-x_test = pd.concat([x_test, test_beats], axis=1)
+# x_test = pd.concat([x_test, test_beats], axis=1)
 
 print(model.score(x_test, y_test))
 y_pred = model.predict(x_test)

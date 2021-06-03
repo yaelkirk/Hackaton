@@ -52,10 +52,11 @@ def decisionTree():
     x_test = x_test.loc[:, features]
     res = clf.score(x_test, y_test)
     joblib.dump(clf, "DecisionTree")
+    select_k_best_features(x_train,y_train,x_test,y_test)
     print(res)
 
 
-def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_beats):
+def select_k_best_features(x_train, y_train, x_test, y_test):
     features_of_features = list()
     number_of_features = list()
     accuracy = list()
@@ -65,13 +66,13 @@ def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_b
             clf = DecisionTreeClassifier(max_depth=j)
             fs = SelectKBest(score_func=chi2, k=i)
             x_reduced_train = fs.fit(x_train, y_train).fit_transform(x_train, y_train)
-            clf.fit(pd.concat([x_reduced_train, train_beats], axis=1), y_train)
+            clf.fit(x_reduced_train,  y_train)
             a = fs.get_support()
             features_of_features.append(a)
             new_series = pd.Series(a)
             b = new_series.values
             new_x = x_test.loc[:, b]
-            res = clf.score(pd.concat([new_x, test_beats], axis=1), y_test)
+            res = clf.score(new_x, y_test)
             number_of_features.append(i)
             tree_depth.append(j)
             accuracy.append(res)
@@ -101,5 +102,5 @@ def select_k_best_features(x_train, y_train, x_test, y_test, train_beats, test_b
     ax.set_zlabel('accuracy')
     plt.show()
 
-
 decisionTree()
+
