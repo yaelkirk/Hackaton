@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import normalize
 crimes_dict = {0: 'BATTERY', 1: 'THEFT', 2: 'CRIMINAL DAMAGE', 3: 'DECEPTIVE PRACTICE', 4: 'ASSAULT'}
 number_dict = {'BATTERY' : 0, 'THEFT' : 1, 'CRIMINAL DAMAGE': 2,
                'DECEPTIVE PRACTICE' : 3, 'ASSAULT' : 4 }
@@ -21,30 +22,58 @@ train = df[~df.isin(test).all(1)]
 #%% take what we need from the data, a little cleanup
 
 
+# def local_cleanup(dataframe):
+#     """
+#     Removes Nans and unneeded columns and replaces strings in Y to ints
+#     :param dataframe: pandas DF
+#     :return: X,Y as np arrays
+#     """
+#     Y = dataframe["Primary Type"]
+#     xy_data = dataframe[["X Coordinate", "Y Coordinate"]]
+#     # y = dataframe["Y Coordinate"]
+#
+#     x = x/max(x) * 10
+#     y = y/max(y) * 10
+#     xy_data = pd.concat([x,y, Y], axis=1).dropna().replace(number_dict)
+#     Y = xy_data["Primary Type"]
+#     x = xy_data["X Coordinate"]
+#     y = xy_data["Y Coordinate"]
+#     xy_data = pd.concat([x,y], axis=1)
+#     X = xy_data.to_numpy()
+#     Y = Y.to_numpy()
+#     X = X * X * X  # Bloat for visualization
+#     return X,Y
+
 def local_cleanup(dataframe):
     """
     Removes Nans and unneeded columns and replaces strings in Y to ints
     :param dataframe: pandas DF
     :return: X,Y as np arrays
     """
-    Y = dataframe["Primary Type"]
-    x = dataframe["X Coordinate"]
-    y = dataframe["Y Coordinate"]
-    x = x/max(x) * 10
-    y = y/max(y) * 10
-    xy_data = pd.concat([x,y, Y], axis=1).dropna().replace(number_dict)
+    # Y = dataframe["Primary Type"]
+    xy_data = dataframe[["X Coordinate", "Y Coordinate", "Primary Type"]]
+    xy_data = xy_data.dropna().replace(number_dict)
     Y = xy_data["Primary Type"]
-    x = xy_data["X Coordinate"]
-    y = xy_data["Y Coordinate"]
-    xy_data = pd.concat([x,y], axis=1)
-    X = xy_data.to_numpy()
+    xy_data = xy_data.drop(['Primary Type'], axis=1)
+
+
+    # xy_data = x/max(x) * 10
+    # y = y/max(y) * 10
+    # # xy_data = pd.concat([x,y, Y], axis=1).dropna().replace(number_dict)
+    # # Y = xy_data["Primary Type"]
+    # # x = xy_data["X Coordinate"]
+    # # y = xy_data["Y Coordinate"]
+    # xy_data = pd.concat([x,y], axis=1)
+    X = normalize(xy_data.to_numpy(), axis=0, norm='max')
+    X = X * 10
     Y = Y.to_numpy()
     X = X * X * X  # Bloat for visualization
+    print(X)
     return X,Y
 
 
 #%% to numpy
-X,y = local_cleanup(df)
+X,Y = local_cleanup(df)
 X_train, Y_train = local_cleanup(train)
 X_test, Y_test = local_cleanup(test)
 
@@ -54,7 +83,7 @@ neighbors = [5,10,15,20,30,50]
 
 n_neighbors = 50
 #%% run KNN
-knn = KNeighborsClassifier(n_neighbors)
+knn = KNeighborsClassifier(n_neighbors, weights='distance')
 
 #%% predict
 
@@ -84,7 +113,7 @@ Z = knn.predict(np.c_[xx.ravel(), yy.ravel()])
 # plt.show()
 
 
-knn.fit(X, Y)
+# knn.fit(X_train, Y_train)
 
 # Plot the decision boundary. For that, we will asign a color to each
 # point in the mesh [x_min, m_max]x[y_min, y_max].
