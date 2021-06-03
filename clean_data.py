@@ -68,6 +68,10 @@ def additional_preprocessing(df):
     df["Time1"] = np.sin(df["Time"] * 2 / 1440 * np.pi)
     df["Time2"] = np.cos(df["Time"] * 2 / 1440 * np.pi)
     df = df.drop(["Time"], axis=1)
+    
+    df["Month1"] = np.sin(df["Month"] * 2 / 12 * np.pi)
+    df["Month2"] = np.cos(df["Month"] * 2 / 12 * np.pi)
+
     return df
 
 clean("Task2/Dataset_crimes.csv").to_csv("clean_data.csv")
