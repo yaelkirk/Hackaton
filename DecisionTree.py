@@ -51,9 +51,7 @@ def decisionTree():
     clf.fit(x_train, y_train)
     x_test = x_test.loc[:, features]
     res = clf.score(x_test, y_test)
-    joblib.dump(clf, "DecisionTree")
-    select_k_best_features(x_train,y_train,x_test,y_test)
-    print(res)
+    joblib.dump(clf, "DecisionTree.pkl")
 
 
 def select_k_best_features(x_train, y_train, x_test, y_test):
